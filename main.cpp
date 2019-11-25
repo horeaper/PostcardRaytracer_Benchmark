@@ -200,21 +200,27 @@ int main()
 		}
 	};
 
+	SetPriorityClass(GetCurrentProcess(), ABOVE_NORMAL_PRIORITY_CLASS);
+
 	LARGE_INTEGER frequency;
 	LARGE_INTEGER multi_begin, multi_end, single_begin, single_end;
 	QueryPerformanceFrequency(&frequency);
 
-	int samples = 64;
-	QueryPerformanceCounter(&multi_begin);
-	concurrency::parallel_for(0, height, [&](int y) { fnProcessScanline(samples, y); });
-	QueryPerformanceCounter(&multi_end);
-
-	samples = 16;
+	printf("Benchmarking single-threaded with 16 samples...");
+	int samples = 16;
 	QueryPerformanceCounter(&single_begin);
 	for (int y = 0; y < height; ++y) {
 		fnProcessScanline(samples, y);
 	}
 	QueryPerformanceCounter(&single_end);
+	printf("\n");
+
+	printf("Benchmarking multi-threaded with 128 samples...");
+	samples = 128;
+	QueryPerformanceCounter(&multi_begin);
+	concurrency::parallel_for(0, height, [&](int y) { fnProcessScanline(samples, y); });
+	QueryPerformanceCounter(&multi_end);
+	printf("\n");
 
 /*
 	printf("P6 %d %d 255 ", width, height);
@@ -227,12 +233,12 @@ int main()
 	delete[] ColorOutput;
 */
 
-	auto multiCounter = multi_end.QuadPart - multi_begin.QuadPart;
 	auto singleCounter = single_end.QuadPart - single_begin.QuadPart;
-	int multiTime = (int)((double)multiCounter / (double)frequency.QuadPart);
+	auto multiCounter = multi_end.QuadPart - multi_begin.QuadPart;
 	int singleTime = (int)((double)singleCounter / (double)frequency.QuadPart);
-	printf(" Multi Threaded: %dm%ds\n", multiTime / 60, multiTime % 60);
+	int multiTime = (int)((double)multiCounter / (double)frequency.QuadPart);
 	printf("Single Threaded: %dm%ds\n", singleTime / 60, singleTime % 60);
+	printf(" Multi Threaded: %dm%ds\n", multiTime / 60, multiTime % 60);
 	system("pause");
 	
 	return 0;
