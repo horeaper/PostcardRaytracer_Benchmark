@@ -160,7 +160,6 @@ int main()
 {
 	const int width = 960;
 	const int height = 540;
-	const int samplesCount = 16;
 
 	const Vec position(-22, 5, 25);
 	const Vec goal = !(Vec(-3, 4, 0) + position * -1);
@@ -180,15 +179,15 @@ int main()
 
 // 	ColorValue* ColorOutput = new ColorValue[width * height];
 
-	auto fnProcessScanline = [&](int y) {
+	auto fnProcessScanline = [&](int samples, int y) {
 		for (int x = 0; x < width; ++x) {
 			Vec color;
-			for (int p = samplesCount; p--;) {
+			for (int p = samples; p--;) {
 				color = color + Trace(position, !(goal + left * (x - width / 2 + randomVal()) + up * (y - height / 2 + randomVal())));
 			}
 
 			// Reinhard tone mapping
-			color = color * (1.0f / samplesCount) + 14.0f / 241;
+			color = color * (1.0f / samples) + 14.0f / 241;
 			const Vec o = color + 1;
 			color = Vec(color.x / o.x, color.y / o.y, color.z / o.z) * 255;
 
@@ -202,16 +201,18 @@ int main()
 	};
 
 	LARGE_INTEGER frequency;
+	LARGE_INTEGER multi_begin, multi_end, single_begin, single_end;
 	QueryPerformanceFrequency(&frequency);
 
-	LARGE_INTEGER multi_begin, multi_end, single_begin, single_end;
+	int samples = 64;
 	QueryPerformanceCounter(&multi_begin);
-	concurrency::parallel_for(0, height, fnProcessScanline);
+	concurrency::parallel_for(0, height, [&](int y) { fnProcessScanline(samples, y); });
 	QueryPerformanceCounter(&multi_end);
 
+	samples = 16;
 	QueryPerformanceCounter(&single_begin);
 	for (int y = 0; y < height; ++y) {
-		fnProcessScanline(y);
+		fnProcessScanline(samples, y);
 	}
 	QueryPerformanceCounter(&single_end);
 
@@ -226,12 +227,12 @@ int main()
 	delete[] ColorOutput;
 */
 
-	auto singleCounter = single_end.QuadPart - single_begin.QuadPart;
 	auto multiCounter = multi_end.QuadPart - multi_begin.QuadPart;
-	double singleTime = (double)singleCounter / (double)frequency.QuadPart;
-	double multiTime = (double)multiCounter / (double)frequency.QuadPart;
-	printf("Single Threaded: %ds\n", (int)singleTime);
-	printf(" Multi Threaded: %ds\n", (int)multiTime);
+	auto singleCounter = single_end.QuadPart - single_begin.QuadPart;
+	int multiTime = (int)((double)multiCounter / (double)frequency.QuadPart);
+	int singleTime = (int)((double)singleCounter / (double)frequency.QuadPart);
+	printf(" Multi Threaded: %dm%ds\n", multiTime / 60, multiTime % 60);
+	printf("Single Threaded: %dm%ds\n", singleTime / 60, singleTime % 60);
 	system("pause");
 	
 	return 0;
