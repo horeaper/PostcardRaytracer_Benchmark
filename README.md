@@ -14,6 +14,10 @@ Close background processes as much as possible. Run, and wait patiently. Don't e
 
 ### Ryzen 5 1600X, DDR4-3000 16-17-17-35 Dual Channel
 
-Single Threaded: 3m36s
+- Single Threaded: 3m36s
+- Multi Threaded: 3m54s
 
-Multi Threaded: 3m54s
+### Ryzen 7 3700X, DDR4-3000 16-17-17-35 Dual Channel
+
+- Single Threaded: 2m55s
+- Multi Threaded: 2m28s
