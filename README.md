@@ -21,3 +21,8 @@ Close background processes as much as possible. Run, and wait patiently. Don't e
 
 - Single Threaded: 2m55s
 - Multi Threaded: 2m28s
+
+### Core i5-14600KF, DDR4-3600 18-22-22-42 Dual Channel
+
+- Single Threaded: 2m5s
+- Multi Threaded: 1m33s
